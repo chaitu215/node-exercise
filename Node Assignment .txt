@@ -1,0 +1,150 @@
+1) /character/:name' - Returns an EJS view (nothing too fancy) with data about the given character.
+ (Needs to work with at least 'luke', 'han', 'leia', and 'rey')
+2) '/characters' - Returns raw JSON of 50 characters (doesn't matter which 50). 
+This endpoint should be able to take a query parameter in the URL called 'sort' and the potential sort parameters will be 1 of the following,
+ ['name', 'mass', 'height']
+ So the endpoint '/characters?sort=height' should return JSON of 50 characters sorted by their height.
+3) '/planetresidents' - Return raw JSON in the form {planetName1: [characterName1, characterName2], planetName2: [characterName3]}. 
+So it is an object where the keys are the planet names, and the values are lists of residents names for that planet
+4) Use the API at https://swapi.co/ to get your Star Wars Data
+5)  When making paginated calls, limit the response to 10, 
+so you can actually demonstrate using pagination to get all of the data
+
+================
+
+Install the terminal 
+
+$ npm install
+
+----------------
+
+// senario : Use the API at https://swapi.co/ to get your Star Wars Data
+
+var url = 'https://swapi.co/';
+
+ http.get(url, function(res) {
+      var fbResponse = JSON.parse(res)
+      console.log("Got response: " + fbResponse.name );
+    }).on('error', function(e) {
+      console.log("Got error: " + e.message);
+ });
+
+--------------
+
+// senario : When making paginated calls, limit the response to 10, 
+// so you can actually demonstrate using pagination to get all of the data
+
+install : npm install -S express-paginate
+API  : var paginate = require('express-paginate');
+
+
+app.all(function(req, res, next) {
+  // set default or minimum is 10 (as it was prior to v0.2.0)
+  if (req.query.limit <= 10) req.query.limit = 10;
+  next();
+});
+
+var express = require('express');
+var paginate = require('express-paginate');
+var app = express();
+
+// keep this before all routes that will use pagination
+app.use(paginate.middleware(10, 50));
+
+app.get('https://swapi.co/', function(req, res, next)
+
+Users.paginate({}, { page: req.query.page, limit: req.query.limit }, function(err, users, pageCount, itemCount) {
+
+    if (err) return next(err);
+
+    res.format({
+      html: function() {
+        res.render('names', {
+          users: names,
+          pageCount: pageCount,
+          itemCount: itemCount,
+          pages: paginate.getArrayPages(req)(3, pageCount, req.query.page)
+        });
+      },
+      json: function() {
+        // inspired by Stripe's API response for list objects
+        res.json({
+          object: 'name',
+          has_more: paginate.hasNextPages(req)(pageCount),
+          data: name
+        });
+      }
+    });
+
+  });
+
+});
+
+app.listen(3000);
+
+
+name.jade 
+--------------
+
+h1 name
+
+//- this will simply generate a link to sort by name
+a(href=paginate.href({ sort: '' })) Sort by name
+
+include _paginate
+
+_paginate.jade
+-------------------------
+
+if paginate.hasPreviousPages || paginate.hasNextPages(pageCount)
+  .navigation.well-sm#pagination
+    ul.pager
+      if paginate.hasPreviousPages
+        li.previous
+          a(href=paginate.href(true)).prev
+            i.fa.fa-arrow-circle-left
+            |  Previous
+      if pages
+        each page in pages
+          a.btn.btn-default(href=page.url)= page.number
+      if paginate.hasNextPages(pageCount)
+        li.next
+          a(href=paginate.href()).next
+            | Next&nbsp;
+            i.fa.fa-arrow-circle-right
+
+=======================================================================
+
+// senario : /character/:name' - Returns an EJS view (nothing too fancy) with data about the given character.
+//  (Needs to work with at least 'luke', 'han', 'leia', and 'rey')
+
+var express = require('express');
+var app = express();
+-
+app.get('/character/:name', function(req, res){
+
+    res.send([{name:'luke'}, {name:'han'}, {name:'leia'} , {name:'rey'}]);
+
+});
+
+============================================================
+
+// senario :'/planetresidents' - Return raw JSON in the form 
+// {planetName1: [characterName1, characterName2], planetName2: [characterName3]}. 
+// So it is an object where the keys are the planet names, and the values are lists of residents names for that planet
+
+
+var express = require('express')
+  , app = express.createServer();
+
+app.use(express.bodyParser());
+
+app.post('/planetresidents', function(request, response){
+  console.log(request.body);      // your JSON
+  response.send(request.body);    // echo the result back
+  var name = res.query.charecterName1;
+  var age= res.query.charecterName2;
+});
+
+
+
